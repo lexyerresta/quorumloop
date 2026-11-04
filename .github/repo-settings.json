@@ -1,0 +1,44 @@
+{
+  "$comment": "Desired state for the GitHub repository page. GitHub reads none of this from the tree, so `pnpm github:setup` applies it through the REST API. Keep it reviewable: one key here is one field on the settings page.",
+  "description": "Self-hosted AI development orchestration platform. A backlog becomes delegated work that AI coding agents execute, with real repositories, branches, pull requests and an audit trail. TypeScript monorepo: NestJS/Fastify services, PostgreSQL, NATS JetStream.",
+  "homepage": "",
+  "topics": [
+    "ai-agents",
+    "ai-orchestration",
+    "self-hosted",
+    "nestjs",
+    "fastify",
+    "typescript",
+    "microservices",
+    "monorepo",
+    "turborepo",
+    "pnpm",
+    "postgresql",
+    "drizzle-orm",
+    "nats",
+    "jetstream",
+    "docker-compose",
+    "developer-tools",
+    "code-review",
+    "open-source"
+  ],
+  "features": {
+    "has_issues": true,
+    "has_projects": false,
+    "has_discussions": false,
+    "has_wiki": false
+  },
+  "merge": {
+    "allow_squash_merge": true,
+    "allow_merge_commit": false,
+    "allow_rebase_merge": false,
+    "delete_branch_on_merge": true,
+    "allow_auto_merge": true
+  },
+  "security": {
+    "dependabot_security_updates": true,
+    "secret_scanning": true,
+    "secret_scanning_push_protection": true,
+    "private_vulnerability_reporting": true
+  }
+}

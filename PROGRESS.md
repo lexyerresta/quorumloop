@@ -4,6 +4,42 @@ Newest first. Every entry states the command that produced it, so a reader can r
 instead of trusting the text. Percentages are deliberately absent: they hide which part of the last
 ten percent is the hard part.
 
+## 2026-11-04: repository settings kept as files
+
+GitHub reads the About metadata, merge options and branch protection from its own settings, not from
+the tree, so they were the one part of the project that existed only as clicks in a browser.
+
+### What was added
+
+- `.github/repo-settings.json` — description, 18 topics, feature flags, merge policy (squash only,
+  delete the branch on merge, auto-merge allowed) and security toggles (Dependabot security updates,
+  secret scanning and push protection, private vulnerability reporting).
+- `.github/rulesets/main.json` — default-branch ruleset: no deletion, no force push, pull request
+  required, `lint`/`types`/`test` required, branch must be up to date before merging.
+- `scripts/github-setup.mjs`, run as `pnpm github:setup [--dry-run]` — applies both files through the
+  REST API. It is idempotent (a ruleset is matched by name and updated in place), and a security
+  toggle the plan or token cannot set warns instead of aborting the run.
+- `DECISIONS.md` D-13 records why `dependencies` stays out of the required checks and why the approval
+  count is zero.
+
+### Gates
+
+| Command                                   | Result                                                                                                |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `pnpm format` / `pnpm format:check`       | all matched files use Prettier code style                                                             |
+| `pnpm lint --concurrency=2`               | 28 of 28 tasks successful                                                                             |
+| `node scripts/github-setup.mjs --dry-run` | prints every call: repo patch, topics, security, private vulnerability reporting, ruleset read/create |
+
+`pnpm lint` at the default concurrency died with exit `-1073740791` (`0xC0000409`) while the ten
+service processes were running; the same command with `--concurrency=2` passed. That is a local
+memory limit, not a lint failure, and it is reproducible only with the cluster up.
+
+### Not verified
+
+The script has never talked to the API with a real token: only `--dry-run` was run. The ruleset
+cannot block anything until the three checks have reported at least once, which needs the CI workflow
+to run on GitHub for the first time.
+
 ## 2026-11-04: settings, notification and audit services (Phase 1 close-out)
 
 Environment unchanged: Windows, Node 24.12.0, pnpm 10.20.0, PostgreSQL, NATS and Redis in Docker on

@@ -30,6 +30,7 @@
     "db:migrate": "node scripts/migrate-all.mjs",
     "setup": "node scripts/setup.mjs",
     "smoke": "node scripts/smoke.mjs",
+    "github:setup": "node scripts/github-setup.mjs",
     "check": "pnpm typecheck && pnpm lint && pnpm test"
   },
   "devDependencies": {

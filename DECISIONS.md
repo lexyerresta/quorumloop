@@ -154,3 +154,17 @@ Consequence: `settings-service` writes the policy and its revision and publishes
 provider-router or the dashboard needs the event, it is added together with its consumer and its
 contract test, not before. The service catalog lists this explicitly so the missing publish is not
 read as an omission.
+
+### D-13. Repository settings are files applied by a script, and only three checks block a merge
+
+GitHub reads none of the About metadata, merge options or branch protection from the tree. Leaving
+them as clicks means the repository configuration exists only in a browser session. The desired
+state lives in `.github/repo-settings.json` and `.github/rulesets/main.json`, and `pnpm github:setup`
+applies it through the REST API, so changing a rule is a reviewable diff.
+
+Consequence: `lint`, `types` and `test` are the required status checks. The `dependencies` job stays
+advisory (`continue-on-error`), because an upstream advisory must be triaged rather than blocking
+every pull request, and Dependabot is the enforcement path. The ruleset requires a pull request but
+zero approvals: a repository with one maintainer that demands an approval from somebody else cannot
+merge at all. Raising the count is a one-line change in the JSON when a second maintainer exists. A
+token with Administration write is needed to apply the file; there is no file GitHub reads on its own.

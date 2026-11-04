@@ -157,7 +157,15 @@ provider-registry 7010, provider-router 7011, orchestration 7012, execution 7013
 | `pnpm db:migrate`                            | apply SQL migrations to every owned database          |
 | `pnpm dev:core`                              | run the implemented services locally                  |
 | `pnpm smoke`                                 | end-to-end check against a running gateway            |
+| `pnpm github:setup`                          | apply repository settings and the branch ruleset      |
 | `pnpm compose:core`                          | full Compose stack (fails until `apps/web` exists)    |
+
+GitHub takes the About metadata, merge options and branch protection from its own settings, not from
+the repository. The desired state is therefore kept in files — `.github/repo-settings.json` and
+`.github/rulesets/main.json` — and `pnpm github:setup` applies it through the API with a token that
+has Administration write; `--dry-run` prints the calls without changing anything. Merges into the
+default branch must pass a pull request and the `lint`, `types` and `test` checks; `dependencies` stays
+advisory (see `DECISIONS.md` D-13).
 
 ## Configuration
 
@@ -202,4 +210,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and the
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE) for third-party attribution.
-"# quorumloop" 
+"# quorumloop"
