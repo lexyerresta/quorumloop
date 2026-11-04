@@ -1,0 +1,10 @@
+# The repository stores LF. Windows checkouts may still hold CRLF in the working tree, which is
+# why Prettier runs with endOfLine "auto"; this rule keeps what git publishes normalised.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary

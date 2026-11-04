@@ -1,0 +1,43 @@
+Quorumloop
+Copyright 2026 Quorumloop contributors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+================================================================================
+THIRD-PARTY MATERIAL INCLUDED IN THIS REPOSITORY
+================================================================================
+
+1. Anti-Slop design rules
+   File:       docs/antislop/antislop.md
+   Upstream:   https://github.com/miqdadbadjuber/anti-slop
+   Version:    3.2.25 (vendored verbatim, pinned)
+   Copyright:  Anti-Slop contributors
+   License:    MIT
+
+   The rules are vendored unmodified so that UI work in this repository can be
+   reviewed against a fixed rule set. Quorumloop's own visual direction lives in
+   DESIGN.md and is not a copy of upstream material.
+
+================================================================================
+TRADEMARKS AND AFFILIATION
+================================================================================
+
+Quorumloop is an independent project. It is not affiliated with, endorsed by, or
+sponsored by Anthropic, OpenAI, OpenCode, Qoder, Paseo, Orca, GitHub, or GitLab.
+
+Anthropic, Claude, Claude Code, OpenAI, Codex, GitHub and GitLab are trademarks of
+their respective owners. Product names are used only to describe interoperability.
+No vendor source code, prompts, model weights, or assets are redistributed here.
+Integrations call each vendor's documented CLI, API, or published SDK, and every
+adapter documents the exact commands or endpoints it uses.
+
+================================================================================
+RUNTIME DEPENDENCIES
+================================================================================
+
+Quorumloop depends on third-party npm packages (NestJS, Fastify, Drizzle ORM,
+postgres.js, NATS client, zod, pino, React, Vite, and others). Their licenses are
+declared in the lockfile and in each package's own manifest; `pnpm licenses list`
+produces the full inventory for a given install. Dependencies are audited in CI,
+and no dependency is added without a stated reason in the pull request that
+introduces it.

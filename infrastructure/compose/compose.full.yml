@@ -1,0 +1,158 @@
+# Everything, including orchestration and execution. Execution still needs an explicit
+# operator opt-in: EXECUTION_ENABLED must be true and at least one engine must be installed.
+name: quorumloop
+
+include:
+  - path: compose.core.yml
+
+x-extra: &extra
+  restart: unless-stopped
+  env_file:
+    - ../../.env
+  environment:
+    SERVICE_DISCOVERY: dns
+    NODE_ENV: production
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: 5432
+    NATS_URL: nats://nats:4222
+    REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
+  networks:
+    - quorumloop
+  profiles:
+    - full
+    - demo
+  depends_on:
+    postgres:
+      condition: service_healthy
+    nats:
+      condition: service_healthy
+
+x-probe: &probe
+  interval: 10s
+  timeout: 3s
+  retries: 12
+  start_period: 30s
+
+services:
+  workspace-service:
+    <<: *extra
+    build:
+      context: ../..
+      dockerfile: services/workspace-service/Dockerfile
+    environment:
+      SERVICE_DISCOVERY: dns
+      NODE_ENV: production
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
+      WORKSPACE_ROOT: /workspace
+    volumes:
+      - worktrees:/workspace
+    healthcheck:
+      <<: *probe
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7008/health/live']
+
+  agent-control-service:
+    <<: *extra
+    build:
+      context: ../..
+      dockerfile: services/agent-control-service/Dockerfile
+    healthcheck:
+      <<: *probe
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7009/health/live']
+
+  provider-registry-service:
+    <<: *extra
+    build:
+      context: ../..
+      dockerfile: services/provider-registry-service/Dockerfile
+    healthcheck:
+      <<: *probe
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7010/health/live']
+
+  provider-router-service:
+    <<: *extra
+    build:
+      context: ../..
+      dockerfile: services/provider-router-service/Dockerfile
+    healthcheck:
+      <<: *probe
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7011/health/live']
+
+  orchestration-service:
+    <<: *extra
+    build:
+      context: ../..
+      dockerfile: services/orchestration-service/Dockerfile
+    healthcheck:
+      <<: *probe
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7012/health/live']
+
+  execution-service:
+    <<: *extra
+    build:
+      context: ../..
+      dockerfile: services/execution-service/Dockerfile
+    environment:
+      SERVICE_DISCOVERY: dns
+      NODE_ENV: production
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
+      WORKSPACE_ROOT: /workspace
+    volumes:
+      - worktrees:/workspace
+    healthcheck:
+      <<: *probe
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7013/health/live']
+
+  product-planning-service:
+    <<: *extra
+    build:
+      context: ../..
+      dockerfile: services/product-planning-service/Dockerfile
+    healthcheck:
+      <<: *probe
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7014/health/live']
+
+  scheduler-service:
+    <<: *extra
+    build:
+      context: ../..
+      dockerfile: services/scheduler-service/Dockerfile
+    healthcheck:
+      <<: *probe
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7015/health/live']
+
+  quality-service:
+    <<: *extra
+    build:
+      context: ../..
+      dockerfile: services/quality-service/Dockerfile
+    environment:
+      SERVICE_DISCOVERY: dns
+      NODE_ENV: production
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
+      WORKSPACE_ROOT: /workspace
+    volumes:
+      - worktrees:/workspace
+    healthcheck:
+      <<: *probe
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7017/health/live']
+
+  usage-service:
+    <<: *extra
+    build:
+      context: ../..
+      dockerfile: services/usage-service/Dockerfile
+    healthcheck:
+      <<: *probe
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7019/health/live']
+
+volumes:
+  worktrees:

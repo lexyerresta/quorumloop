@@ -1,0 +1,38 @@
+{
+  "name": "@quorumloop/platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Neutral runtime utilities: Nest bootstrap, internal auth, database, messaging, health",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src test --no-error-on-unmatched-pattern",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.3.2",
+    "@nestjs/core": "12.3.2",
+    "@nestjs/platform-fastify": "12.3.2",
+    "@quorumloop/config": "workspace:*",
+    "@quorumloop/contracts": "workspace:*",
+    "@quorumloop/observability": "workspace:*",
+    "drizzle-orm": "0.45.4",
+    "fastify": "5.12.8",
+    "nats": "2.29.3",
+    "pino": "10.4.0",
+    "postgres": "4.0.0",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  }
+}

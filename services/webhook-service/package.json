@@ -1,0 +1,36 @@
+{
+  "name": "@quorumloop/webhook-service",
+  "version": "0.1.0",
+  "private": true,
+  "description": "signature verification, delivery dedup, normalized forge events",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "lint": "eslint src test --no-error-on-unmatched-pattern",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.3.2",
+    "@nestjs/core": "12.3.2",
+    "@nestjs/platform-fastify": "12.3.2",
+    "@quorumloop/config": "workspace:*",
+    "@quorumloop/contracts": "workspace:*",
+    "@quorumloop/observability": "workspace:*",
+    "@quorumloop/platform": "workspace:*",
+    "fastify": "5.12.8",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "zod": "4.6.7",
+    "drizzle-orm": "0.45.4",
+    "postgres": "4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  }
+}

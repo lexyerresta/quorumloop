@@ -1,0 +1,218 @@
+# Smallest honest Quorumloop install: onboarding, projects, Kanban, webhooks and a real
+# dashboard. Orchestration and execution stay out so nothing can spend provider quota.
+name: quorumloop
+
+x-service: &service
+  restart: unless-stopped
+  env_file:
+    - ../../.env
+  environment:
+    # Inside Compose everything is addressed by service name, so the localhost values in
+    # .env must not leak into a container.
+    SERVICE_DISCOVERY: dns
+    NODE_ENV: production
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: 5432
+    NATS_URL: nats://nats:4222
+    REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
+  networks:
+    - quorumloop
+  depends_on:
+    postgres:
+      condition: service_healthy
+    nats:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+x-healthcheck: &healthcheck
+  interval: 10s
+  timeout: 3s
+  retries: 12
+  start_period: 20s
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_SUPERUSER:-quorumloop}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set POSTGRES_SUPERUSER_PASSWORD}
+      POSTGRES_SERVICE_PASSWORD: ${POSTGRES_SERVICE_PASSWORD:?set POSTGRES_SERVICE_PASSWORD}
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../postgres/init:/docker-entrypoint-initdb.d:ro
+    # Published so `pnpm dev:core` can run the services on the host against this instance.
+    ports:
+      - '${PUBLIC_BIND:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_SUPERUSER:-quorumloop} -d postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - quorumloop
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      [
+        'redis-server',
+        '--requirepass',
+        '${REDIS_PASSWORD:?set REDIS_PASSWORD}',
+        '--maxmemory-policy',
+        'noeviction',
+      ]
+    volumes:
+      - redisdata:/data
+    ports:
+      - '${PUBLIC_BIND:-127.0.0.1}:${REDIS_PORT:-6379}:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - quorumloop
+
+  nats:
+    image: nats:2.11-alpine
+    restart: unless-stopped
+    command: ['-c', '/etc/nats/nats.conf']
+    volumes:
+      - ../nats/nats.conf:/etc/nats/nats.conf:ro
+      - natsdata:/data
+    ports:
+      - '${PUBLIC_BIND:-127.0.0.1}:${NATS_PORT:-4222}:4222'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:8222/healthz || exit 1']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - quorumloop
+
+  identity-service:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: services/identity-service/Dockerfile
+    healthcheck:
+      <<: *healthcheck
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7002/health/live']
+
+  project-service:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: services/project-service/Dockerfile
+    healthcheck:
+      <<: *healthcheck
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7003/health/live']
+
+  settings-service:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: services/settings-service/Dockerfile
+    healthcheck:
+      <<: *healthcheck
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7004/health/live']
+
+  notification-service:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: services/notification-service/Dockerfile
+    healthcheck:
+      <<: *healthcheck
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7005/health/live']
+
+  source-control-service:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: services/source-control-service/Dockerfile
+    healthcheck:
+      <<: *healthcheck
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7006/health/live']
+
+  webhook-service:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: services/webhook-service/Dockerfile
+    healthcheck:
+      <<: *healthcheck
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7007/health/live']
+
+  task-service:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: services/task-service/Dockerfile
+    healthcheck:
+      <<: *healthcheck
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7016/health/live']
+
+  activity-service:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: services/activity-service/Dockerfile
+    healthcheck:
+      <<: *healthcheck
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7018/health/live']
+
+  audit-service:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: services/audit-service/Dockerfile
+    healthcheck:
+      <<: *healthcheck
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7020/health/live']
+
+  api-gateway:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: services/api-gateway/Dockerfile
+    environment:
+      SERVICE_DISCOVERY: dns
+      NODE_ENV: production
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
+      WEB_DIST_DIR: /app/web
+    volumes:
+      - webdist:/app/web:ro
+    ports:
+      - '${PUBLIC_BIND:-127.0.0.1}:${PUBLIC_PORT:-8080}:7001'
+    healthcheck:
+      <<: *healthcheck
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:7001/health/live']
+
+  web:
+    profiles: ['core']
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    volumes:
+      - webdist:/out
+    networks:
+      - quorumloop
+
+volumes:
+  pgdata:
+  redisdata:
+  natsdata:
+  webdist:
+
+networks:
+  quorumloop:
+    driver: bridge

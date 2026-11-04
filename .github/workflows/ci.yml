@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '24.12.0'
+  PNPM_VERSION: '10.20.0'
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Prettier (check only)
+        run: pnpm format:check
+      - name: ESLint
+        run: pnpm lint
+
+  types:
+    name: types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm build
+      - name: Typecheck
+        run: pnpm typecheck
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Unit and contract tests
+        run: pnpm test
+      - name: Contract tests
+        run: pnpm test:contracts
+
+  dependencies:
+    name: dependencies
+    runs-on: ubuntu-latest
+    # Advisory: an upstream advisory must be triaged, not silently block every pull request.
+    # Dependabot alerts and security updates are the enforcement path for known vulnerabilities.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level high
+      - name: Inventory production licenses
+        run: pnpm licenses list --prod

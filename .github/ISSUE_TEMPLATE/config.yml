@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/OWNER/REPOSITORY/security/advisories/new
+    about: Report privately. Do not open a public issue for a suspected vulnerability.
+  - name: Setup and operations questions
+    url: https://github.com/OWNER/REPOSITORY/discussions
+    about: Ask how to install, configure or operate an instance.
+  - name: Known limitations
+    url: https://github.com/OWNER/REPOSITORY/blob/main/KNOWN_LIMITATIONS.md
+    about: Check this before reporting something as missing — it may be an unfinished area.

@@ -1,0 +1,83 @@
+name: Bug report
+description: Something in Quorumloop does not behave as documented
+labels: [bug, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not report security vulnerabilities here. Use the repository's **Security** tab →
+        **Report a vulnerability** (see SECURITY.md).
+
+        Before filing, confirm the behaviour against a clean `pnpm setup` environment and check
+        KNOWN_LIMITATIONS.md — many unfinished areas are already documented as unimplemented.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: The observed behaviour, including the exact error message or response envelope.
+      placeholder: POST /api/v1/projects returned 500 with code INTERNAL ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: The behaviour you expected, and where it is specified (PRD section, ADR, README).
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Commands or requests in order. Include the service and route or the script you ran.
+      placeholder: |
+        1. pnpm setup && pnpm infra:up && pnpm build && pnpm db:migrate
+        2. pnpm dev:core --compiled --no-web
+        3. curl -i http://127.0.0.1:7001/health/ready
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - api-gateway
+        - identity-service
+        - project-service
+        - task-service
+        - source-control-service
+        - webhook-service
+        - activity-service
+        - scaffolded service (no domain code yet)
+        - infrastructure / Compose
+        - scripts (setup, dev-core, migrate-all, smoke)
+        - documentation
+
+  - type: input
+    id: version
+    attributes:
+      label: Commit
+      description: Output of `git rev-parse --short HEAD`.
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node version, pnpm version, Docker version, and whether PostgreSQL/Redis/NATS are bundled containers or external.
+      placeholder: Windows 11, Node 24.12.0, pnpm 10.20.0, Docker Desktop 4.x, bundled containers
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Relevant log lines from the failing service (structured JSON is fine). Remove tokens, cookies and anything personal first.
+      render: shell

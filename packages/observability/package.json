@@ -1,0 +1,25 @@
+{
+  "name": "@quorumloop/observability",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.3.2",
+    "@quorumloop/config": "workspace:*",
+    "pino": "10.4.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  }
+}

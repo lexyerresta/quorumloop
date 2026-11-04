@@ -1,0 +1,73 @@
+name: Feature or service proposal
+description: Propose a capability, an endpoint, or the implementation of a scaffolded service
+labels: [enhancement, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Quorumloop has 20 services; 7 are implemented and 13 are boot-only scaffolds. Proposals
+        for a scaffolded service are welcome, but they must state the service boundary: which
+        tables it owns, which endpoints it exposes, which events it publishes and consumes.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of change
+      options:
+        - Implement a scaffolded service
+        - Add an endpoint or capability to an implemented service
+        - Dashboard or UX work
+        - Infrastructure, deployment or operations
+        - Documentation or developer experience
+        - Refactor without behaviour change
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: The concrete problem this solves. Reference the PRD section or the workflow that is currently impossible or painful.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What you want to build, described in terms of behaviour. Include the API surface, the data the service owns, and the events it emits or consumes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches, including "do nothing", and why they are worse.
+
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Service boundaries
+      description: If this touches more than one service, describe the contract between them. Reads go over signed internal HTTP, reactions go over NATS.
+
+  - type: dropdown
+    id: honesty
+    attributes:
+      label: Data and integration honesty
+      description: How will this behave when a credential, provider or dependency is unavailable?
+      options:
+        - It reports the integration as unconfigured or unavailable; no fallback result
+        - It works without the integration and says so in the response
+        - Not applicable (no external integration)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This proposal does not require weakening an existing security control
+          required: true
+        - label: I am willing to open a pull request for this

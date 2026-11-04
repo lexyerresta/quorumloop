@@ -1,0 +1,54 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "NATS_URL",
+    "REDIS_URL",
+    "INTERNAL_SHARED_SECRET",
+    "SESSION_SECRET",
+    "SECRET_ENCRYPTION_KEY",
+    "GITHUB_APP_ID",
+    "GITHUB_APP_PRIVATE_KEY",
+    "GITHUB_CLIENT_ID",
+    "GITHUB_CLIENT_SECRET",
+    "GITHUB_WEBHOOK_SECRET",
+    "GITLAB_BASE_URL",
+    "GITLAB_CLIENT_ID",
+    "GITLAB_CLIENT_SECRET",
+    "GITLAB_WEBHOOK_SECRET",
+    "PASEO_DAEMON_URL",
+    "PASEO_TOKEN",
+    "ORCA_ENABLED",
+    "DEMO_MODE",
+    "AUTO_MIGRATE"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.ts", "!**/test/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "lint": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test:contracts": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
