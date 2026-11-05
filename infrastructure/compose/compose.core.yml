@@ -188,6 +188,13 @@ services:
       NATS_URL: nats://nats:4222
       REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
       WEB_DIST_DIR: /app/web
+      # The health and overview fan-out resolves every catalogued service name. Names this profile
+      # does not deploy take seconds to fail through Docker's DNS, and with libuv's default four
+      # lookup threads they stalled every other upstream call (DECISIONS.md D-17).
+      UV_THREADPOOL_SIZE: '32'
+      # Services this profile runs. The gateway reports the others as not deployed instead of
+      # resolving their names. compose.full.yml sets this to `all` through full.env.
+      QUORUMLOOP_DEPLOYED_SERVICES: ${QUORUMLOOP_DEPLOYED_SERVICES:-identity-service,project-service,settings-service,notification-service,source-control-service,webhook-service,task-service,activity-service,audit-service}
     volumes:
       - webdist:/app/web:ro
     ports:

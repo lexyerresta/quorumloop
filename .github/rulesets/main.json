@@ -1,8 +1,9 @@
 {
-  "$comment": "Ruleset for the default branch, applied by `pnpm github:setup`. The three required checks are the CI jobs that must pass before a merge; dependencies stays advisory and deliberately out of this list (DECISIONS.md D-13).",
+  "$comment": "Ruleset for the default branch, applied by `pnpm github:setup`. The three required checks are the CI jobs that must pass before a merge; dependencies stays advisory and deliberately out of this list (DECISIONS.md D-13). Repository admins (actor 5) bypass it so the owner can push directly (DECISIONS.md D-14).",
   "name": "main",
   "target": "branch",
   "enforcement": "active",
+  "bypass_actors": [{ "actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "always" }],
   "conditions": {
     "ref_name": {
       "include": ["~DEFAULT_BRANCH"],

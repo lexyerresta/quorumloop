@@ -168,3 +168,77 @@ every pull request, and Dependabot is the enforcement path. The ruleset requires
 zero approvals: a repository with one maintainer that demands an approval from somebody else cannot
 merge at all. Raising the count is a one-line change in the JSON when a second maintainer exists. A
 token with Administration write is needed to apply the file; there is no file GitHub reads on its own.
+
+### D-14. Repository admins bypass the default-branch ruleset
+
+The owner asked to keep pushing to `main` directly while the ruleset stays strict for everyone else.
+`.github/rulesets/main.json` lists the repository `admin` role (`actor_id` 5, `RepositoryRole`) in
+`bypass_actors` with `bypass_mode: always`. On a personal repository only the owner holds that role,
+so contributors still need a pull request and the `lint`, `types` and `test` checks.
+
+Consequence: a direct push from the owner skips CI, so `pnpm check` before pushing is the owner's
+gate. Anyone later granted the admin role inherits the bypass; switch `bypass_mode` to
+`pull_request` or remove the entry when a second maintainer joins.
+
+### D-15. The dashboard is a same-origin SPA that imports contract types only
+
+`apps/web` is React 19 + Vite 8 + TanStack Router and Query, as PRD section 5 fixes. Three choices
+shape it:
+
+- **One origin.** In development Vite proxies `/api` to the gateway; in Compose the gateway serves
+  the build from `WEB_DIST_DIR` (`services/api-gateway/src/static-web.ts`). The session cookie and
+  the double-submit CSRF header therefore work without CORS, and the SSE relay, which writes to the
+  raw socket and skips the CORS plugin, works too. The static handler never answers `/api` or
+  `/health`, so an unknown API route still gets the gateway's error envelope.
+- **Contract types, not contract code.** The client uses `import type` from
+  `@quorumloop/contracts`, so the browser bundle carries no zod and the gateway stays the only
+  validator. A contract change still breaks `pnpm typecheck` for the web app.
+- **Honest figures over the overview payload.** `/api/v1/overview` folds a failed dependency into
+  `0`. Rather than change the gateway contract in the same step, the dashboard shows a figure only
+  when the owning service answered `/api/v1/health`, and shows the quality and agent figures as
+  Unavailable because their services are scaffolds (`apps/web/src/lib/domain.ts`). Fixing the
+  payload to carry `null` for an unavailable figure is the cleaner end state.
+
+Consequence: the board offers moves from a client copy of the transition table, guarded by a test
+that reads `task.rules.ts`; the server remains the authority and its refusal reason is shown.
+
+### D-16. Dockerfiles install pnpm with npm instead of corepack
+
+`node:26-alpine` ships without `corepack` (Node 25 removed it from the distribution), so the
+original `corepack enable` line failed with exit 127 and no image could build. Every Dockerfile now
+runs `npm install -g pnpm@10.20.0`, which pins the same version as `packageManager`. A root
+`.dockerignore` keeps `node_modules`, build output and `.env` out of the build context.
+
+### D-17. The gateway does not resolve services the deployment does not run
+
+In the Compose core profile ten of the twenty services exist. `GET /api/v1/health` probed all of
+them, and resolving an absent container name through Docker's DNS took 2 to 4 seconds before
+`ENOTFOUND`. Node resolves names on libuv's thread pool (four threads by default), so ten slow
+lookups stalled every other upstream call: the dashboard, which polls health, made the gateway
+answer `503 UPSTREAM_UNAVAILABLE` (`UND_ERR_CONNECT_TIMEOUT`) for sign-in and every list in bursts.
+
+Two changes, both measured against the live Compose stack:
+
+- `QUORUMLOOP_DEPLOYED_SERVICES` lists the services a profile runs. The gateway reports any other
+  catalogued service as `unknown` with the detail `not deployed in this profile`, and the overview
+  skips it, without a DNS lookup. Unset or `all` keeps the old behaviour; `pnpm compose:full` loads
+  `infrastructure/compose/full.env` to set `all`.
+- `UV_THREADPOOL_SIZE=32` on the gateway, so a slow lookup cannot starve the rest.
+
+Result: `/api/v1/health` went from 2.0 s to under 50 ms, and the dashboard click-through against the
+Compose stack went from 29 upstream failures to 0. `ServiceClient` now puts undici's `cause` into the
+error message (`fetch failed (UND_ERR_CONNECT_TIMEOUT: ...)`), which is what made this diagnosable.
+
+### D-18. The project page is a separate static site, not a screen of the dashboard
+
+The owner asked for a landing page. The PRD (section 12) and `DESIGN.md` sections 1 and 10 say the
+dashboard is not a landing page and must not carry a marketing hero, so the page lives in
+`apps/site`: a static HTML page with a few lines of TypeScript, built by Vite with a relative base
+so it can be served from any path (GitHub Pages included) without a rebuild. The dashboard is
+unchanged and a self-hosted instance never shows marketing copy to its own operators.
+
+The page reuses the dashboard's tokens, type and round-rule motif so the two read as one product,
+and `tokens.test.ts` fails if its colours drift from `apps/web/src/styles.css`. Its only images are
+real screenshots from the dashboard click-through, captioned as such. Every status claim on it is
+copied from README's status table and `KNOWN_LIMITATIONS.md`. It is not published anywhere:
+publishing needs the owner's approval (AGENTS.md rule 8).

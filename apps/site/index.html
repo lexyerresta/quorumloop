@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Quorumloop: self-hosted orchestration for coding agents</title>
+    <meta
+      name="description"
+      content="Quorumloop is an open-source, self-hosted platform that turns a project backlog into tasks for AI coding agents and keeps a record of every decision about them."
+    />
+    <script>
+      // Applied before first paint so a saved dark theme never flashes light.
+      try {
+        if (localStorage.getItem('quorumloop.theme') === 'dark') {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      } catch {
+        /* storage blocked: the light default stays */
+      }
+    </script>
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="masthead">
+      <div class="wrap masthead-row">
+        <a class="wordmark" href="#main">Quorumloop</a>
+        <nav class="topnav" aria-label="Page sections">
+          <a href="#loop">The loop</a>
+          <a href="#status">What runs today</a>
+          <a href="#self-host">Self-host</a>
+          <a href="https://github.com/lexyerresta/quorumloop">Source on GitHub</a>
+        </nav>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+          Dark theme
+        </button>
+      </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+      <section class="hero wrap" aria-labelledby="hero-title">
+        <h1 id="hero-title">A self-hosted record of the work you hand to coding agents.</h1>
+        <div class="round-rule" aria-hidden="true"></div>
+        <div class="hero-body">
+          <p class="lede">
+            Quorumloop turns a project backlog into tasks for AI coding agents, on your own machine,
+            against your own GitHub or GitLab repositories. Every move a task makes is written down:
+            who moved it, why, which branch it touched, and what the quality gate proved.
+          </p>
+          <p class="status-line">
+            <span class="mark mark-wait" aria-hidden="true"></span>
+            Early development. The dashboard, projects, tasks, forge connections and the activity
+            feed work today. Agents do not run yet.
+          </p>
+          <div class="actions">
+            <a class="btn btn-primary" href="#self-host">Read the self-host steps</a>
+            <a class="btn" href="https://github.com/lexyerresta/quorumloop">Read the source</a>
+          </div>
+        </div>
+
+        <figure class="shot">
+          <img
+            class="shot-light"
+            src="/overview-light.png"
+            width="1366"
+            height="900"
+            fetchpriority="high"
+            alt="The Quorumloop overview screen: a figure strip with 2 projects and 0 tasks in progress, Quality passed and Active agents reading Unavailable, a project ledger with two projects that have no repository, and an empty alerts panel."
+          />
+          <img
+            class="shot-dark"
+            src="/overview-dark.png"
+            width="1366"
+            height="900"
+            loading="lazy"
+            alt="The Quorumloop overview screen in the dark theme, with the same figures and ledger."
+          />
+          <figcaption>
+            The overview of a local instance, captured on 5 November 2026 during the dashboard
+            click-through. The two projects are test data. Quality and agent figures read
+            Unavailable because those services are not built yet.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section id="loop" class="band" aria-labelledby="loop-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="loop-title">The loop a task goes through</h2>
+            <p>
+              Five lanes, each with a rule about who may move a task out of it. The task service
+              checks every move and refuses an illegal one with the reason, so the history is a list
+              of decisions, not a list of drags.
+            </p>
+          </div>
+          <ol class="loop">
+            <li>
+              <span class="loop-step">01</span>
+              <h3>Backlog</h3>
+              <p>An instruction from the composer, or a task you write, lands here.</p>
+              <p class="today">
+                <span class="mark mark-pass" aria-hidden="true"></span>Works today
+              </p>
+            </li>
+            <li>
+              <span class="loop-step">02</span>
+              <h3>Ready</h3>
+              <p>A person promotes it once its acceptance criteria and dependencies are set.</p>
+              <p class="today">
+                <span class="mark mark-pass" aria-hidden="true"></span>Works today
+              </p>
+            </li>
+            <li>
+              <span class="loop-step">03</span>
+              <h3>In progress</h3>
+              <p>
+                Planned: one agent takes a fenced lease on the task and works on its own branch.
+              </p>
+              <p class="today">
+                <span class="mark mark-wait" aria-hidden="true"></span>Moved by hand; no agent picks
+                it up yet
+              </p>
+            </li>
+            <li>
+              <span class="loop-step">04</span>
+              <h3>In review</h3>
+              <p>Planned: a pull request opens and the quality gate runs against it.</p>
+              <p class="today">
+                <span class="mark mark-wait" aria-hidden="true"></span>Lane works; the quality
+                service is a scaffold
+              </p>
+            </li>
+            <li>
+              <span class="loop-step">05</span>
+              <h3>Done</h3>
+              <p>Only reachable when the quality gate reports a pass with evidence.</p>
+              <p class="today">
+                <span class="mark mark-idle" aria-hidden="true"></span>Unreachable until the gate
+                exists, by design
+              </p>
+            </li>
+          </ol>
+          <p class="aside">
+            Any working lane can move to Blocked with a reason. The reason stays in the task
+            history, next to who wrote it.
+          </p>
+        </div>
+      </section>
+
+      <section id="status" class="wrap split" aria-labelledby="status-title">
+        <div class="section-head">
+          <h2 id="status-title">What runs today</h2>
+          <p>
+            Ten of the twenty services are implemented. The other ten build, boot and answer health
+            checks, and own no data yet. The dashboard reports them as not deployed rather than
+            showing a number for them.
+          </p>
+          <p>
+            Full detail per item lives in
+            <a href="https://github.com/lexyerresta/quorumloop/blob/main/KNOWN_LIMITATIONS.md"
+              >KNOWN_LIMITATIONS.md</a
+            >.
+          </p>
+        </div>
+        <table class="ledger">
+          <caption class="sr-only">
+            Implementation state per area
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Area</th>
+              <th scope="col">State</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Sign-in, first-run setup, sessions, CSRF, roles</td>
+              <td><span class="mark mark-pass" aria-hidden="true"></span>Working</td>
+            </tr>
+            <tr>
+              <td>Projects: create, import, start from an idea, bind a repository</td>
+              <td><span class="mark mark-pass" aria-hidden="true"></span>Working</td>
+            </tr>
+            <tr>
+              <td>GitHub and GitLab connections, commit, branch and pull request cache</td>
+              <td><span class="mark mark-pass" aria-hidden="true"></span>Working</td>
+            </tr>
+            <tr>
+              <td>Signed forge webhooks with delivery dedupe</td>
+              <td><span class="mark mark-pass" aria-hidden="true"></span>Working</td>
+            </tr>
+            <tr>
+              <td>Tasks: epics, Kanban lanes, dependencies, transition rules</td>
+              <td><span class="mark mark-pass" aria-hidden="true"></span>Working</td>
+            </tr>
+            <tr>
+              <td>Activity timeline with live updates</td>
+              <td><span class="mark mark-pass" aria-hidden="true"></span>Working</td>
+            </tr>
+            <tr>
+              <td>Organization policy, approvals queue, in-app notifications</td>
+              <td><span class="mark mark-pass" aria-hidden="true"></span>Working</td>
+            </tr>
+            <tr>
+              <td>Agent runs: orchestration, execution, provider routing</td>
+              <td><span class="mark mark-idle" aria-hidden="true"></span>Scaffold</td>
+            </tr>
+            <tr>
+              <td>Quality gate, usage, scheduling, workspaces, planning</td>
+              <td><span class="mark mark-idle" aria-hidden="true"></span>Scaffold</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="band" aria-labelledby="built-title">
+        <div class="wrap built">
+          <div>
+            <h2 id="built-title">Rules the code enforces</h2>
+            <dl class="rules">
+              <dt>One database per service</dt>
+              <dd>
+                Each service has its own PostgreSQL database and login role. No service reads
+                another service's tables.
+              </dd>
+              <dt>Events through an outbox</dt>
+              <dd>
+                A state change and its event are written in the same transaction, then published to
+                NATS JetStream. Consumers drop a redelivered event by its id.
+              </dd>
+              <dt>A gateway with no business rules</dt>
+              <dd>
+                It checks the browser session and the CSRF token, then forwards a signed call to the
+                service that owns the data.
+              </dd>
+              <dt>No invented numbers</dt>
+              <dd>
+                A figure appears when a service returned it. Otherwise the dashboard says
+                Unavailable or Not connected.
+              </dd>
+            </dl>
+          </div>
+          <div>
+            <h3 class="list-title">Services and ports</h3>
+            <ul class="services">
+              <li><span>api-gateway</span><span>7001</span></li>
+              <li><span>identity</span><span>7002</span></li>
+              <li><span>project</span><span>7003</span></li>
+              <li><span>settings</span><span>7004</span></li>
+              <li><span>notification</span><span>7005</span></li>
+              <li><span>source-control</span><span>7006</span></li>
+              <li><span>webhook</span><span>7007</span></li>
+              <li><span>task</span><span>7016</span></li>
+              <li><span>activity</span><span>7018</span></li>
+              <li><span>audit</span><span>7020</span></li>
+            </ul>
+            <p class="services-note">
+              Scaffolds: workspace 7008, agent-control 7009, provider-registry 7010, provider-router
+              7011, orchestration 7012, execution 7013, product-planning 7014, scheduler 7015,
+              quality 7017, usage 7019.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="self-host" class="wrap split" aria-labelledby="self-host-title">
+        <div class="section-head">
+          <h2 id="self-host-title">Run it on your machine</h2>
+          <p>You need Node.js 24 or newer, pnpm 10.20.0, and Docker with Compose v2.</p>
+          <p>
+            <code>pnpm run setup</code> writes <code>.env</code> with generated secrets. After the
+            last command, open <code>http://localhost:5173</code>; on a new instance the dashboard
+            asks you to create the first admin.
+          </p>
+          <p>
+            Prefer containers? <code>pnpm compose:core</code> builds the whole core stack and serves
+            the dashboard on <code>http://localhost:8080</code>.
+          </p>
+        </div>
+        <div class="code-panel">
+          <div class="code-head">
+            <span>Quickstart, from the repository root</span>
+            <button class="btn btn-small" type="button" data-copy="quickstart">
+              Copy commands
+            </button>
+          </div>
+          <pre
+            id="quickstart"
+            role="region"
+            aria-label="Quickstart commands"
+            tabindex="0"
+          ><code>git clone https://github.com/lexyerresta/quorumloop.git
+cd quorumloop
+npm install -g pnpm@10.20.0
+pnpm install
+pnpm run setup
+pnpm infra:up
+pnpm build
+pnpm db:migrate
+pnpm dev:core --compiled</code></pre>
+          <p class="copy-status" role="status" aria-live="polite" data-copy-status></p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="colophon">
+      <div class="wrap colophon-row">
+        <p>
+          Apache-2.0. Quorumloop is an independent project, not affiliated with Anthropic, OpenAI,
+          OpenCode, Qoder, Paseo, Orca, GitHub or GitLab.
+        </p>
+        <p class="colophon-links">
+          <a href="https://github.com/lexyerresta/quorumloop/blob/main/LICENSE">License</a>
+          <a href="https://github.com/lexyerresta/quorumloop/blob/main/NOTICE">Notice</a>
+          <a href="https://github.com/lexyerresta/quorumloop/blob/main/SECURITY.md"
+            >Security policy</a
+          >
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -73,6 +73,21 @@ const CONTEXT_STATUS: Record<number, ErrorCode> = {
  * correlation id of the request that caused them. A failure surfaces as a DomainError with
  * the upstream code so a caller never has to re-derive it from a status number.
  */
+/**
+ * `fetch` reports every transport failure as "fetch failed" and keeps the reason in `cause`
+ * (undici's socket error code). The reason is what tells a refused port from a reset keep-alive
+ * socket, so it goes into the message.
+ */
+export function describeFetchError(error: unknown): string {
+  if (!(error instanceof Error)) return 'unknown error';
+  const cause = (error as { cause?: unknown }).cause;
+  if (cause instanceof Error) {
+    const code = (cause as { code?: unknown }).code;
+    return `${error.message} (${typeof code === 'string' ? `${code}: ` : ''}${cause.message})`;
+  }
+  return error.message;
+}
+
 export class ServiceClient {
   private readonly secret: string;
   private readonly timeoutMs: number;
@@ -182,7 +197,7 @@ export class ServiceClient {
     }).catch((error: unknown) => {
       throw new DomainError(
         'UPSTREAM_UNAVAILABLE',
-        `cannot reach ${options.target}: ${error instanceof Error ? error.message : 'unknown error'}`,
+        `cannot reach ${options.target}: ${describeFetchError(error)}`,
         true,
       );
     });
@@ -199,7 +214,7 @@ export class ServiceClient {
     }).catch((error: unknown) => {
       throw new DomainError(
         'UPSTREAM_UNAVAILABLE',
-        `cannot reach ${options.target}: ${error instanceof Error ? error.message : 'unknown error'}`,
+        `cannot reach ${options.target}: ${describeFetchError(error)}`,
         true,
       );
     });

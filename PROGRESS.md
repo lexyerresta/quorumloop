@@ -4,6 +4,78 @@ Newest first. Every entry states the command that produced it, so a reader can r
 instead of trusting the text. Percentages are deliberately absent: they hide which part of the last
 ten percent is the hard part.
 
+## 2026-11-05: project page (`apps/site`)
+
+- Built `apps/site`, a static project page requested by the owner (`DECISIONS.md` D-18, `DESIGN.md`
+  section 13): what Quorumloop is, the task loop with what works today per lane, the status ledger,
+  the rules the code enforces with the service list, and the quickstart with a copy button. The hero
+  visual is the real overview screenshot from the dashboard click-through.
+- Verified: `pnpm --filter @quorumloop/site build`, `lint`, `typecheck`, `test` (3, token drift
+  against the dashboard) and `e2e` against `vite preview` (2/2: every link, theme toggle, reload,
+  copy, 360px in both themes, axe 0 violations on 4 scans, no console errors). Log in
+  `docs/quality/clickthrough-log-site.md`. Every external link answered 200 on the day.
+- Fixed before delivery: both hero screenshots showed at once (a specificity bug the first
+  click-through missed, now asserted), the masthead cut "Source on GitHub" off at 360px, and the
+  scrollable quickstart block was not keyboard-focusable (axe `scrollable-region-focusable`).
+- Not done: publishing. The page is local only.
+- README: "Getting started" now offers the Docker path (`pnpm compose:core`, port 8080) beside the
+  host path, and a new "Using the dashboard" section walks through first sign-in with the bootstrap
+  token, connecting a forge, projects, the board, instructions and the other screens.
+
+## 2026-11-05: dashboard (`apps/web`) and the Compose path
+
+Environment: Windows 11, Node 26.13.0, pnpm 10.20.0, Docker Desktop 29.9.2 with PostgreSQL, NATS and
+Redis on 127.0.0.1:5432, 4222 and 6379, Chromium from Playwright 1.64.1.
+
+### What was built
+
+- **`apps/web`**: React 19, Vite 8, TanStack Router and Query, typed against `@quorumloop/contracts`
+  with type-only imports. Screens: sign-in, first-run setup, overview, projects (create, start from
+  idea, import from a connection), project detail (Kanban with legal moves, activity over SSE, code,
+  settings and archive), task detail (transitions with reasons, history, edit), connections
+  (GitHub and GitLab connect, repository browser, import, remove), approvals, notifications and
+  organization policy. Tokens and layout follow `DESIGN.md`; one token (`--rule-strong`) was added
+  there for control borders.
+- **Gateway serves the dashboard** from `WEB_DIST_DIR` (`services/api-gateway/src/static-web.ts`,
+  6 tests): SPA fallback, strict CSP, path traversal guard, `/api` and `/health` never shadowed.
+- **`apps/web/Dockerfile`** publishes the build into the `webdist` volume; a root `.dockerignore`
+  keeps `node_modules`, build output and `.env` out of every build context.
+- **Anti-Slop skills** 3.2.25 added under `docs/antislop/skills/` (fetched from the tagged release
+  with the owner's permission, matched against the core's version).
+- **Branch ruleset**: repository admins bypass `main` protection (`DECISIONS.md` D-14). Not applied
+  to GitHub yet; `pnpm github:setup` needs the owner's token.
+
+### Defects found and fixed on the way
+
+- Every Dockerfile failed at `corepack enable` (exit 127): Node 26 images no longer ship corepack.
+  All 21 now install pnpm with npm (`DECISIONS.md` D-16).
+- In Compose the dashboard's health polling stalled the gateway: absent service names took 2 to 4 s
+  to fail in Docker's DNS and exhausted libuv's four lookup threads, so sign-in and lists answered 503. Fixed with `QUORUMLOOP_DEPLOYED_SERVICES` and `UV_THREADPOOL_SIZE=32` (`DECISIONS.md` D-17);
+  `/api/v1/health` went from 2.0 s to under 50 ms. `ServiceClient` errors now carry undici's cause.
+- README told readers to run `corepack enable` and `pnpm setup`; the second is pnpm's built-in and
+  never ran the project script. Both corrected in README and CONTRIBUTING.
+- UI defects caught by the gate are listed in `docs/quality/anti-slop-gate.md`.
+
+### Gates
+
+| Command                                                     | Result                                               |
+| ----------------------------------------------------------- | ---------------------------------------------------- |
+| `pnpm build`                                                | 25 of 25 tasks successful                            |
+| `pnpm typecheck`                                            | 29 of 29 tasks successful                            |
+| `pnpm lint --concurrency=2`                                 | 29 of 29 tasks successful                            |
+| `pnpm test`                                                 | 29 of 29 tasks successful (web 46, gateway 9 tests)  |
+| `pnpm test:contracts`                                       | 4 of 4 tasks successful                              |
+| `pnpm format:check`                                         | all matched files use Prettier code style            |
+| `pnpm smoke`                                                | 20 checks green against the host cluster             |
+| `pnpm --filter @quorumloop/web e2e` against `pnpm dev:core` | 3 of 3 passed, 0 console errors, axe 0 violations    |
+| same against `pnpm compose:core` on 8080                    | 3 of 3 passed, 0 console errors, 0 upstream failures |
+
+### Not verified
+
+- `pnpm compose:full` and `compose:demo` were not run.
+- The click-through is not in CI: it needs a live stack and a browser download.
+- No screen reader session, 200% zoom or forced-colors run (see the gate's "Not covered").
+
 ## 2026-11-04: repository settings kept as files
 
 GitHub reads the About metadata, merge options and branch protection from its own settings, not from

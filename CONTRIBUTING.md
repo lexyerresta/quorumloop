@@ -16,13 +16,13 @@ thing to change later.
 ## Development setup
 
 ```bash
-corepack enable
+npm install -g pnpm@10.20.0
 pnpm install
-pnpm setup
+pnpm run setup
 pnpm infra:up
 pnpm build
 pnpm db:migrate
-pnpm dev:core --compiled --no-web
+pnpm dev:core --compiled
 ```
 
 `pnpm dev:core --only identity-service,task-service` starts a subset. On a machine with limited

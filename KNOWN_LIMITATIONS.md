@@ -6,9 +6,33 @@ documentation bug worth reporting.
 
 ## Product surface
 
-- **The dashboard does not exist.** `apps/web` is absent: no React/Vite app, no route shell, no
-  query layer, no Anti-Slop-composed screens. Every interaction must go through the HTTP API.
-  `pnpm compose:core` therefore cannot build, because the Compose file expects that image.
+- **The project page (`apps/site`) is not published.** It builds to `apps/site/dist` and runs
+  locally with `pnpm dev:site` on http://localhost:5174. Hosting it (GitHub Pages or elsewhere)
+  needs the owner's approval. Its status section is written by hand from README and this file, so
+  it must be updated in the same change when either moves. Its click-through is not in CI.
+- **The dashboard covers the implemented services only.** `apps/web` ships sign-in, first-run
+  setup, overview, projects (create, start from idea, import), project detail (Kanban, activity
+  with SSE, code, settings, archive), task detail, forge connections, approvals, notifications and
+  organization settings. Screens from `DESIGN.md` section 11 that need a scaffold service are not
+  built and not linked: agents, agent detail, provider priorities, runs, quality reports, usage,
+  roadmap and the open-source acknowledgements page. There is no member management, invitation or
+  password-change screen, because the gateway exposes no route for them.
+- **`/api/v1/overview` reports a failed dependency as 0.** The gateway folds an unreachable
+  dependency into `0` and logs the failure (`instance-aggregator.service.ts`). The dashboard shows
+  a figure only when its service answered the health probe, and always shows Quality passed and
+  Active agents as Unavailable, because quality-service and agent-control-service are scaffolds.
+- **A task cannot reach Done today.** With `QUALITY_GATE_REQUIRED` at its default, Done needs a
+  passed quality run, and quality-service does not run any. Acceptance criteria are verified only
+  through a task-service route the gateway does not expose. The dashboard shows the server's
+  refusal reason instead of hiding the move.
+- **The board's move list is a client copy of the transition table.** `apps/web/src/lib/domain.ts`
+  mirrors `task.rules.ts` to decide which moves to offer; the server still decides every move, and
+  `apps/web/src/lib/domain.test.ts` fails if the two drift.
+- **`GET /api/v1/runtimes` answers 500.** The gateway targets a `runtime-service` that is not in the
+  service catalog, so `serviceByName` throws. Nothing in the dashboard calls it.
+- **SSE resume is per user and project only.** The gateway relay forwards `project_id` but drops
+  `cursor` and `Last-Event-ID`, so a reconnecting browser resumes from the saved resume point, and
+  the dashboard refetches the feed on each event instead of trusting the stream for ordering.
 - **No AI agent is ever executed.** `execution-service` is a scaffold. It does not read
   `EXECUTION_ENABLED`, does not probe CLIs, and does not call Paseo, Orca or any provider adapter.
   The settings for those integrations exist in `packages/config` and `.env.example` as placeholders.
@@ -18,8 +42,8 @@ documentation bug worth reporting.
   provider-router, orchestration, execution, product-planning, scheduler, quality, usage. Each one
   starts, serves `/health/ready`, and enforces the internal-call guard on `/internal/*`, but owns no
   schema and exposes no domain endpoint. Gateway routes that depend on them (`/api/v1/usage`, the
-  runtime and planning routes) return an upstream error rather than invented data; the overview
-  projection marks them unavailable.
+  runtime and planning routes) return an upstream error rather than invented data; the dashboard
+  marks their figures Unavailable (see the overview entry above).
 - **Demo mode is a flag, not a feature.** `DEMO_MODE` is validated, surfaced in the session and
   overview payloads, and stored on the organization policy, but there is no seeding path, so no demo
   dataset exists to mislabel.
@@ -78,8 +102,12 @@ documentation bug worth reporting.
 
 ## Toolchain and platform
 
-- The Dockerfiles pin `node:26-alpine` while development and CI run Node 24.12.0 (`engines` says
-  `>=24`). Both work, but the container and the dev machine are not the same runtime.
+- The Dockerfiles pin `node:26-alpine` while CI runs Node 24.12.0 (`engines` says `>=24`). Both
+  work, but the container and CI are not the same runtime. Node 25 and later ship without
+  `corepack`, so every Dockerfile installs pnpm with `npm install -g pnpm@10.20.0`.
+- The dashboard click-through (`pnpm --filter @quorumloop/web e2e`) needs a live stack and is not
+  part of `pnpm check` or CI. It downloads Chromium once; set `PLAYWRIGHT_BROWSERS_PATH` to keep it
+  off the system drive.
 - `pnpm dev` starts every service through one Turbo run. Without `--compiled` that means 20 `tsx
 watch` processes; on a 16 GB machine this swaps. Use `pnpm dev:core --compiled` and
   `--only <services>` instead.

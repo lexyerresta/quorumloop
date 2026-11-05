@@ -54,6 +54,7 @@ signals, not part of the brand palette.
 | `--ink`          | `#171B1D` | primary text                              | 15.9:1 on paper                                                           |
 | `--ink-muted`    | `#545C60` | secondary text, labels                    | 6.4:1 on paper, still quiet                                               |
 | `--rule`         | `#D6D0C2` | 1px dividers                              | visible structure without shadows                                         |
+| `--rule-strong`  | `#8A8478` | control borders, header rules, round rule | 3.3:1 on paper, so inputs and buttons meet WCAG 1.4.11 non-text contrast  |
 | `--accent`       | `#8F3512` | primary action, active marker, focus ring | brick reads as "human decision", distinct from blue tool defaults         |
 | `--accent-hover` | `#712A0E` | hover/pressed                             | deeper, never lighter                                                     |
 | `--accent-ink`   | `#FFF8F2` | text on accent fill                       | 8.4:1 on accent                                                           |
@@ -67,6 +68,7 @@ signals, not part of the brand palette.
 | `--ink`          | `#E8E2D6` | primary text               |
 | `--ink-muted`    | `#A5ADA8` | secondary text             |
 | `--rule`         | `#2E353A` | dividers                   |
+| `--rule-strong`  | `#687176` | control borders, 3.3:1     |
 | `--accent`       | `#E07A45` | primary action, focus ring |
 | `--accent-hover` | `#EE8D5B` | hover                      |
 | `--accent-ink`   | `#1B1108` | text on accent fill        |
@@ -196,3 +198,27 @@ usage, settings, open-source acknowledgements, demo mode banner.
 
 The gate is run at the end of each UI phase and recorded in `docs/quality/anti-slop-gate.md`
 with evidence per item. A gate with any FAIL is not shipped.
+
+## 13. Project page (`apps/site`)
+
+Design Read: **a project page for developers evaluating a self-hosted tool, in the same
+decision-ledger language as the console, dial ENERGY 2 / RHYTHM 2 / MOTION 1.**
+
+The page is outside the console, so sections 1 and 10 (no marketing hero inside the app) do not
+forbid it, but every other section applies. What changes, and why:
+
+| Decision                                             | Reason                                                                                                    |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| ENERGY 2, carried by type size only (H1 38 to 64px)  | a first visit has to say what the product is in one line; colour and motion stay at console level         |
+| The round rule once, under the H1                    | section 2: one signature per screen                                                                       |
+| A real screenshot of the overview as the hero visual | shows the product instead of describing it; a fake terminal or invented UI is rejected (section 10, R-05) |
+| Light and dark screenshots swap with the theme       | the image would otherwise break the dark page (R-34)                                                      |
+| The loop as five columns with a heavy top rule       | the content is a sequence of lanes from `task.rules.ts`; each column says what works today                |
+| Status as a ledger table                             | the same record format as the console; facts copied from README, no figures without a source              |
+| Services listed in the data face with ports          | ids and ports align vertically (section 2, secondary motif)                                               |
+| Body 16px, sections 72px apart (48px under 720px)    | reading, not scanning: longer copy than the console needs more air                                        |
+| Masthead links wrap onto two rows under 720px        | four 44px targets fit without a scroller that would cut a label at the edge                               |
+| One-line footer with licence and non-affiliation     | the facts a visitor needs; no four-column link farm (R-05)                                                |
+
+No testimonials, user counts, stars, logos of other companies or performance numbers: none exist
+that could be sourced (R-17, R-18, R-36).

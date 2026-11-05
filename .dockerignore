@@ -1,0 +1,13 @@
+# Keeps host installs, build output and secrets out of every image build context.
+**/node_modules
+**/dist
+**/.turbo
+**/*.tsbuildinfo
+**/test-results
+**/playwright-report
+.env
+.env.*
+!.env.example
+.git
+docs
+.quorumloop

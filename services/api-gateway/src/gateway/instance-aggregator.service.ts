@@ -19,6 +19,29 @@ const SELF = 'api-gateway';
 const alertsSchema = z.array(activityEventSchema);
 
 /**
+ * Services this deployment actually runs, from `QUORUMLOOP_DEPLOYED_SERVICES` (comma separated).
+ * Unset or `all` means "assume every catalogued service". In Compose the core profile deploys ten of the
+ * twenty, and resolving an absent container name through Docker's DNS takes seconds; probing those
+ * names stalled every other upstream call, so they are reported as not deployed without a lookup.
+ */
+export function deployedServices(
+  raw: string | undefined = process.env.QUORUMLOOP_DEPLOYED_SERVICES,
+): Set<string> | null {
+  const names = (raw ?? '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter((name) => name.length > 0);
+  if (names.length === 0 || names.includes('all')) return null;
+  return new Set([SELF, ...names]);
+}
+
+class NotDeployed extends Error {
+  constructor(readonly service: string) {
+    super(`${service} is not deployed in this profile`);
+  }
+}
+
+/**
  * Instance-wide read model. The gateway is the only service allowed to fan out across owners,
  * and it does so with the caller's own scope so an aggregation can never leak another org.
  * A failing upstream degrades the answer instead of inventing a zero.
@@ -31,9 +54,17 @@ export class InstanceAggregator {
   async health(): Promise<InstanceHealth> {
     const env = readEnv();
     const targets = SERVICES.filter((service) => service.name !== SELF);
+    const deployed = deployedServices();
 
     const results = await Promise.all(
       targets.map(async (service) => {
+        if (deployed && !deployed.has(service.name)) {
+          return {
+            name: service.name,
+            status: 'unknown' as const,
+            detail: 'not deployed in this profile',
+          };
+        }
         const report = await this.client.health(service.name);
         return {
           name: service.name,
@@ -58,8 +89,11 @@ export class InstanceAggregator {
 
   async overview(request: FastifyRequest): Promise<Overview> {
     const identity = identityOf(request);
+    const deployed = deployedServices();
     const call = <T>(target: string, path: string, schema: z.ZodType<T>): Promise<T> =>
-      this.client.request<T>({ target, method: 'GET', path, identity }, schema);
+      deployed && !deployed.has(target)
+        ? Promise.reject(new NotDeployed(target))
+        : this.client.request<T>({ target, method: 'GET', path, identity }, schema);
 
     const [projects, tasks, reviews, quality, agents, alerts] = await Promise.allSettled([
       call('project-service', '/v1/projects', z.array(projectSummarySchema)),
@@ -136,6 +170,7 @@ const settled = <T>(
   if (result.status === 'fulfilled') {
     return result.value;
   }
+  if (result.reason instanceof NotDeployed) return undefined;
   logger.warn(`overview projection "${label}" unavailable: ${String(result.reason)}`);
   return undefined;
 };
