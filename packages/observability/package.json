@@ -14,7 +14,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@nestjs/common": "12.3.2",
+    "@nestjs/common": "12.3.3",
     "@quorumloop/config": "workspace:*",
     "pino": "10.4.0"
   },
