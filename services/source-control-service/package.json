@@ -13,9 +13,9 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@nestjs/common": "12.3.2",
-    "@nestjs/core": "12.3.2",
-    "@nestjs/platform-fastify": "12.3.2",
+    "@nestjs/common": "12.5.1",
+    "@nestjs/core": "12.5.1",
+    "@nestjs/platform-fastify": "12.5.1",
     "@quorumloop/config": "workspace:*",
     "@quorumloop/contracts": "workspace:*",
     "@quorumloop/observability": "workspace:*",
